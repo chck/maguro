@@ -17,7 +17,7 @@ Python 3.6.X
 
 # Run on scrapinghub.com (please see below for deployment)
 % open https://app.scrapinghub.com/p/$PROJECT_ID/jobs
-# Click "Run", Spiders: "gladpost"
+# Click "Run", Spiders: "gladpost", Arguments: {"area_id": "14"}
 # Enjoy Serverless!!
 ```
 

@@ -14,6 +14,10 @@ class GladpostSpider(scrapy.Spider):
     allowed_domains = ['happymail.co.jp']
     start_urls = ['http://happymail.co.jp/']
 
+    def __init__(self, area_id='14', *args, **kwargs):
+        super(GladpostSpider, self).__init__(*args, **kwargs)
+        self.area_id = area_id
+
     def parse(self, response):
         return scrapy.FormRequest.from_response(
             response,
@@ -37,10 +41,9 @@ class GladpostSpider(scrapy.Spider):
         return scrapy.FormRequest.from_response(
             response,
             formdata={
-                'SelArea': '14',  # in Tokyo only
+                'SelArea': self.area_id,
                 'UID': UID,
                 'Pg': 'LST',
-
             },
             callback=self.parse_pages,
             method='POST',
