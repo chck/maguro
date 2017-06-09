@@ -2,6 +2,7 @@
 
 import scrapy
 from bs4 import BeautifulSoup
+
 from maguro.items import GladpostItem
 
 UID = 'YOUR_UID'
@@ -66,7 +67,8 @@ class GladpostSpider(scrapy.Spider):
 
     def parse_profiles(self, response):
         soup = BeautifulSoup(response.body, 'lxml')
-        return GladpostItem(image_url=soup.find('img', style='max-width:300px;')['src'])
+        return GladpostItem(url=response.url,
+                            image_url=soup.find('img', style='max-width:300px;')['src'])
 
     def _url(self, path):
         return self.start_urls[0] + path

@@ -15,4 +15,5 @@ class MaguroItem(scrapy.Item):
 
 
 class GladpostItem(scrapy.Item):
+    url = scrapy.Field()
     image_url = scrapy.Field()
