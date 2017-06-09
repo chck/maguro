@@ -1,4 +1,0 @@
-Scrapy==1.4.0
-beautifulsoup4==4.6.0
-shub==2.6.1
-
