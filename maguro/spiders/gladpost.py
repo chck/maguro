@@ -56,7 +56,7 @@ class GladpostSpider(scrapy.Spider):
         for profile in soup.find('div', align='center').table.find_all('a'):
             yield scrapy.Request(self._url(profile['href']), callback=self.parse_profiles)
 
-        maybe_next_page = [tag for tag in soup.find_all('center') if '次へ>>' in tag.text]
+        maybe_next_page = [tag for tag in soup.find_all('center') if '次へ>>'.decode('utf-8') in tag.text]
         if not maybe_next_page:
             yield
         else:
