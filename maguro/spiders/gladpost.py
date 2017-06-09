@@ -60,14 +60,13 @@ class GladpostSpider(scrapy.Spider):
         if not maybe_next_page:
             yield
         else:
-            yield scrapy.Request(self._url(maybe_next_page[0].a['href']),
+            maybe_next_page = [a for a in maybe_next_page[0].find_all('a') if a.text == '>>']
+            yield scrapy.Request(self._url(maybe_next_page[0]['href']),
                                  callback=self.parse_pages)
 
     def parse_profiles(self, response):
         soup = BeautifulSoup(response.body, 'lxml')
-        return GladpostItem(
-            image_url=soup.find('img', style='max-width:300px;')['src']
-        )
+        return GladpostItem(image_url=soup.find('img', style='max-width:300px;')['src'])
 
     def _url(self, path):
         return self.start_urls[0] + path
