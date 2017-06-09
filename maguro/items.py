@@ -12,3 +12,7 @@ class MaguroItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
     pass
+
+
+class GladpostItem(scrapy.Item):
+    image_url = scrapy.Field()
