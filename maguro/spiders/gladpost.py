@@ -67,8 +67,41 @@ class GladpostSpider(scrapy.Spider):
 
     def parse_profiles(self, response):
         soup = BeautifulSoup(response.body, 'lxml')
+        profile = [p for p in soup.find_all('td', align='left')[-1].text.split('\n') if p]
+        profile[6] = profile[6].split('3ｻｲｽﾞ'.decode('utf-8'))
+        profile = list(self._flatten(profile))[:-1]
+        profile = list(self._flatten([p.split(':')[1:] for p in profile]))
         return GladpostItem(url=response.url,
-                            image_url=soup.find('img', style='max-width:300px;')['src'])
+                            image_url=soup.find('img', style='max-width:300px;')['src'],
+                            age=profile[0],
+                            height=profile[1],
+                            style=profile[2],
+                            looks=profile[3],
+                            job=profile[4],
+                            area=profile[5],
+                            device=profile[6],
+                            bwhc=profile[7],
+                            ideal_age=profile[8],
+                            ideal_style=profile[9],
+                            relationship=profile[10],
+                            has_kids=profile[11],
+                            cigar=profile[12],
+                            alcohol=profile[13],
+                            has_cars=profile[14],
+                            blood_type=profile[15],
+                            constellation=profile[16])
 
     def _url(self, path):
         return self.start_urls[0] + path
+
+    def _flatten(self, container):
+        """string friendly flatten
+        https://stackoverflow.com/questions/10823877/what-is-the-fastest-way-to-flatten-arbitrarily-nested-lists-in-python
+        https://stackoverflow.com/questions/2158395/flatten-an-irregular-list-of-lists
+        """
+        for i in container:
+            if isinstance(i, (list, tuple)):
+                for j in self._flatten(i):
+                    yield j
+            else:
+                yield i
