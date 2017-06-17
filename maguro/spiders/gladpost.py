@@ -15,9 +15,10 @@ class GladpostSpider(scrapy.Spider):
     allowed_domains = ['happymail.co.jp']
     start_urls = ['http://happymail.co.jp/']
 
-    def __init__(self, area_id='14', *args, **kwargs):
+    def __init__(self, uid=UID, area_id='14', *args, **kwargs):
         super(GladpostSpider, self).__init__(*args, **kwargs)
         self.area_id = area_id
+        self.uid = uid
 
     def parse(self, response):
         return scrapy.FormRequest.from_response(
@@ -28,13 +29,13 @@ class GladpostSpider(scrapy.Spider):
 
     def pass_index_after_login(self, response):
         return scrapy.Request(
-            '{}?UID={}'.format(self._url('mbmenu.php'), UID),
+            '{}?UID={}'.format(self._url('mbmenu.php'), self.uid),
             callback=self.pass_image_page
         )
 
     def pass_image_page(self, response):
         return scrapy.Request(
-            '{}?UID={}'.format(self._url('srchpic.php'), UID),
+            '{}?UID={}'.format(self._url('srchpic.php'), self.uid),
             callback=self.parse_images
         )
 
@@ -43,7 +44,7 @@ class GladpostSpider(scrapy.Spider):
             response,
             formdata={
                 'SelArea': self.area_id,
-                'UID': UID,
+                'UID': self.uid,
                 'Pg': 'LST',
             },
             callback=self.parse_pages,
