@@ -33,10 +33,7 @@ Python 3.6.X
 % shub deploy
 
 # Add configuration for python3
-% cat <<EOF >> scrapinghub.yml
-stacks:
-  default: scrapy:1.4-py3
-EOF
+% echo 'stack: scrapy:1.4-py3' >> scrapinghub.yml
 
 # Generate eggs to generate `setup.py` and `requirements.txt`
 % shub migrate-eggs
