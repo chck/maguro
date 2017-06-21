@@ -66,7 +66,7 @@ class GladpostSpider(scrapy.Spider):
         for profile in soup.find('div', align='center').table.find_all('a'):
             yield scrapy.Request(self._url(profile['href']), callback=self.parse_profiles)
 
-        maybe_next_page = [tag for tag in soup.find_all('center') if '次へ>>'.decode('utf-8') in tag.text]
+        maybe_next_page = [tag for tag in soup.find_all('center') if '次へ>>' in tag.text]
         if not maybe_next_page:
             yield
         else:
@@ -77,7 +77,7 @@ class GladpostSpider(scrapy.Spider):
     def parse_profiles(self, response):
         soup = BeautifulSoup(response.body, 'lxml')
         profile = [p for p in soup.find_all('td', align='left')[-1].text.split('\n') if p]
-        profile[6] = profile[6].split('3ｻｲｽﾞ'.decode('utf-8'))
+        profile[6] = profile[6].split('3ｻｲｽﾞ')
         profile = list(self._flatten(profile))[:-1]
         profile = list(self._flatten([p.split(':')[1:] for p in profile]))
         return GladpostItem(url=response.url,
