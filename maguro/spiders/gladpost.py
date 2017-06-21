@@ -130,7 +130,7 @@ class GladpostSpider(scrapy.Spider):
                             constellation=profile[16])
 
     def _url(self, path):
-        return self.start_urls[0] + path
+        return self.start_urls[0] + re.sub(r'^\./', '', path)
 
     def _flatten(self, container):
         """string friendly flatten
