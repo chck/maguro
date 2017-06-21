@@ -61,7 +61,7 @@ class GladpostSpider(scrapy.Spider):
         else:
             soup = BeautifulSoup(response.body, 'lxml')
             for option in soup.find('select').find_all('option'):
-                yield _pass_to_parse_pages(area_id=option['value'])
+                yield from _pass_to_parse_pages(area_id=option['value'])
 
     def parse_pages(self, response):
         soup = BeautifulSoup(response.body, 'lxml')
