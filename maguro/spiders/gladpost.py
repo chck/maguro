@@ -15,7 +15,7 @@ class GladpostSpider(scrapy.Spider):
     allowed_domains = ['happymail.co.jp']
     start_urls = ['http://happymail.co.jp/']
 
-    def __init__(self, uid=UID, area_id='14', *args, **kwargs):
+    def __init__(self, area_id=None, uid=UID, *args, **kwargs):
         super(GladpostSpider, self).__init__(*args, **kwargs)
         self.area_id = area_id
         self.uid = uid
@@ -40,17 +40,25 @@ class GladpostSpider(scrapy.Spider):
         )
 
     def parse_images(self, response):
-        return scrapy.FormRequest.from_response(
-            response,
-            formdata={
-                'SelArea': self.area_id,
-                'UID': self.uid,
-                'Pg': 'LST',
-            },
-            callback=self.parse_pages,
-            method='POST',
-            url=self._url('srchpic.php')
-        )
+        def _pass_to_parse_pages(area_id):
+            return scrapy.FormRequest.from_response(
+                response,
+                formdata={
+                    'SelArea': area_id,
+                    'UID': self.uid,
+                    'Pg': 'LST',
+                },
+                callback=self.parse_pages,
+                method='POST',
+                url=self._url('srchpic.php')
+            )
+
+        if self.area_id:
+            yield _pass_to_parse_pages(self.area_id)
+        else:
+            soup = BeautifulSoup(response.body, 'lxml')
+            for option in soup.find('select').find_all('option'):
+                yield _pass_to_parse_pages(area_id=option['value'])
 
     def parse_pages(self, response):
         soup = BeautifulSoup(response.body, 'lxml')
