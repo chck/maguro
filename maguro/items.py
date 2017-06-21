@@ -16,7 +16,11 @@ class MaguroItem(scrapy.Item):
 
 class GladpostItem(scrapy.Item):
     url = scrapy.Field()
-    image_url = scrapy.Field()
+    image1 = scrapy.Field()
+    image2 = scrapy.Field()
+    image3 = scrapy.Field()
+    image4 = scrapy.Field()
+    image5 = scrapy.Field()
     age = scrapy.Field()
     height = scrapy.Field()
     style = scrapy.Field()

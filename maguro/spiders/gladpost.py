@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import re
+from typing import List, Text
+
 import scrapy
 from bs4 import BeautifulSoup
 
@@ -64,7 +67,7 @@ class GladpostSpider(scrapy.Spider):
         soup = BeautifulSoup(response.body, 'lxml')
 
         for profile in soup.find('div', align='center').table.find_all('a'):
-            yield scrapy.Request(self._url(profile['href']), callback=self.parse_profiles)
+            yield scrapy.Request(self._url(profile['href']), callback=self.parse_profile_image)
 
         maybe_next_page = [tag for tag in soup.find_all('center') if '次へ>>' in tag.text]
         if not maybe_next_page:
@@ -74,14 +77,40 @@ class GladpostSpider(scrapy.Spider):
             yield scrapy.Request(self._url(maybe_next_page[0]['href']),
                                  callback=self.parse_pages)
 
-    def parse_profiles(self, response):
+    def parse_profile_image(self, response):
         soup = BeautifulSoup(response.body, 'lxml')
+
+        if 'images' not in response.meta:
+            response.meta['images'] = []
+        response.meta['images'].append(soup.find('img', style='max-width:300px;')['src'])
+
+        image_pages = soup.find_all('td', align='left')[0].find_all('center')[-1].find_all('a')
+        current_image_id: int = self._extract_image_id(response.url)
+        next_image_page = [a['href'] for a in image_pages if self._extract_image_id(a['href']) == current_image_id + 1]
+
+        if next_image_page:
+            yield scrapy.Request(self._url(next_image_page[0]),
+                                 callback=self.parse_profile_image,
+                                 meta={
+                                     'images': response.meta['images']
+                                 },
+                                 dont_filter=True)  # allow duplicate
+        else:
+            yield self._extract_profiles(response.url,
+                                         soup,
+                                         response.meta['images'])
+
+    def _extract_profiles(self, url: Text, soup: BeautifulSoup, images: List[Text]):
         profile = [p for p in soup.find_all('td', align='left')[-1].text.split('\n') if p]
         profile[6] = profile[6].split('3ｻｲｽﾞ')
         profile = list(self._flatten(profile))[:-1]
         profile = list(self._flatten([p.split(':')[1:] for p in profile]))
-        return GladpostItem(url=response.url,
-                            image_url=soup.find('img', style='max-width:300px;')['src'],
+        return GladpostItem(url=url,
+                            image1=images[0],
+                            image2=images[1] if images[1:] else None,
+                            image3=images[2] if images[2:] else None,
+                            image4=images[3] if images[3:] else None,
+                            image5=images[4] if images[4:] else None,
                             age=profile[0],
                             height=profile[1],
                             style=profile[2],
@@ -114,3 +143,6 @@ class GladpostSpider(scrapy.Spider):
                     yield j
             else:
                 yield i
+
+    def _extract_image_id(self, url: Text) -> int:
+        return int(re.search(r'&Ln=(\d)', url).group(1))
