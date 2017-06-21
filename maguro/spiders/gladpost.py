@@ -15,7 +15,7 @@ class GladpostSpider(scrapy.Spider):
     allowed_domains = ['happymail.co.jp']
     start_urls = ['http://happymail.co.jp/']
 
-    def __init__(self, uid=UID, area_id='14', *args, **kwargs):
+    def __init__(self, area_id=None, uid=UID, *args, **kwargs):
         super(GladpostSpider, self).__init__(*args, **kwargs)
         self.area_id = area_id
         self.uid = uid
@@ -40,17 +40,25 @@ class GladpostSpider(scrapy.Spider):
         )
 
     def parse_images(self, response):
-        return scrapy.FormRequest.from_response(
-            response,
-            formdata={
-                'SelArea': self.area_id,
-                'UID': self.uid,
-                'Pg': 'LST',
-            },
-            callback=self.parse_pages,
-            method='POST',
-            url=self._url('srchpic.php')
-        )
+        def _pass_to_parse_pages(area_id):
+            return scrapy.FormRequest.from_response(
+                response,
+                formdata={
+                    'SelArea': area_id,
+                    'UID': self.uid,
+                    'Pg': 'LST',
+                },
+                callback=self.parse_pages,
+                method='POST',
+                url=self._url('srchpic.php')
+            )
+
+        if self.area_id:
+            yield _pass_to_parse_pages(self.area_id)
+        else:
+            soup = BeautifulSoup(response.body, 'lxml')
+            for option in soup.find('select').find_all('option'):
+                yield _pass_to_parse_pages(area_id=option['value'])
 
     def parse_pages(self, response):
         soup = BeautifulSoup(response.body, 'lxml')
@@ -58,7 +66,7 @@ class GladpostSpider(scrapy.Spider):
         for profile in soup.find('div', align='center').table.find_all('a'):
             yield scrapy.Request(self._url(profile['href']), callback=self.parse_profiles)
 
-        maybe_next_page = [tag for tag in soup.find_all('center') if '次へ>>'.decode('utf-8') in tag.text]
+        maybe_next_page = [tag for tag in soup.find_all('center') if '次へ>>' in tag.text]
         if not maybe_next_page:
             yield
         else:
@@ -69,7 +77,7 @@ class GladpostSpider(scrapy.Spider):
     def parse_profiles(self, response):
         soup = BeautifulSoup(response.body, 'lxml')
         profile = [p for p in soup.find_all('td', align='left')[-1].text.split('\n') if p]
-        profile[6] = profile[6].split('3ｻｲｽﾞ'.decode('utf-8'))
+        profile[6] = profile[6].split('3ｻｲｽﾞ')
         profile = list(self._flatten(profile))[:-1]
         profile = list(self._flatten([p.split(':')[1:] for p in profile]))
         return GladpostItem(url=response.url,
